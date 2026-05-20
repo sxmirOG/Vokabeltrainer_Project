@@ -1,0 +1,3 @@
+{
+  "git.path": "${workspaceFolder}/.tools/mingit/cmd/git.exe"
+}
