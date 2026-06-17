@@ -59,11 +59,11 @@ public class VocabularyModel {
 
     public void addVocabulary(String german, String translation) {
         if (german.isBlank() || translation.isBlank()) {
-            throw new IllegalArgumentException("Beide Felder muessen ausgefuellt sein.");
+            throw new IllegalArgumentException("Beide Felder muessen ausgefüllt sein.");
         }
 
         if (containsWord(german) || containsWord(translation)) {
-            throw new IllegalArgumentException("Dieses Wort ist bereits im Woerterbuch.");
+            throw new IllegalArgumentException("Dieses Wort ist bereits im Wörterbuch.");
         }
 
         vocabularyList.add(new Vocabulary(german.trim(), translation.trim()));
@@ -77,7 +77,7 @@ public class VocabularyModel {
         Vocabulary vocabulary = findVocabulary(word);
 
         if (vocabulary == null) {
-            throw new IllegalArgumentException("Das Wort kommt nicht im Woerterbuch vor.");
+            throw new IllegalArgumentException("Das Wort kommt nicht im Wörterbuch vor.");
         }
 
         vocabularyList.remove(vocabulary);
