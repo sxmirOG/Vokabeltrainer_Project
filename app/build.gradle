@@ -27,6 +27,16 @@ application {
     mainClass = 'org.example.App'
 }
 
+jar {
+    manifest {
+        attributes 'Main-Class': 'org.example.Launcher'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 tasks.named('test') {
     useJUnitPlatform()
 }

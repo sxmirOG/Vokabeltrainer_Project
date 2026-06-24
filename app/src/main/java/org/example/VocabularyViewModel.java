@@ -1,6 +1,5 @@
 package org.example;
 
-import java.io.IOException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -13,10 +12,16 @@ import javafx.scene.paint.Color;
 
 public class VocabularyViewModel {
     @FXML
-    private TextField germanInput;
+    private TextField firstLanguageInput;
 
     @FXML
-    private TextField translationInput;
+    private TextField secondLanguageInput;
+
+    @FXML
+    private TextField firstWordInput;
+
+    @FXML
+    private TextField secondWordInput;
 
     @FXML
     private TextField deleteInput;
@@ -28,10 +33,10 @@ public class VocabularyViewModel {
     private TableView<Vocabulary> vocabularyTable;
 
     @FXML
-    private TableColumn<Vocabulary, String> germanColumn;
+    private TableColumn<Vocabulary, String> firstWordColumn;
 
     @FXML
-    private TableColumn<Vocabulary, String> translationColumn;
+    private TableColumn<Vocabulary, String> secondWordColumn;
 
     @FXML
     private Label questionLabel;
@@ -51,26 +56,39 @@ public class VocabularyViewModel {
     private final VocabularyModel model = new VocabularyModel();
     private final ObservableList<Vocabulary> observableVocabularyList = FXCollections.observableArrayList();
     private Vocabulary currentVocabulary;
-    private boolean germanToEnglish = true;
+    private boolean firstToSecond = true;
 
     @FXML
     public void initialize() {
-        germanColumn.setCellValueFactory(new PropertyValueFactory<>("german"));
-        translationColumn.setCellValueFactory(new PropertyValueFactory<>("translation"));
+        firstWordColumn.setCellValueFactory(new PropertyValueFactory<>("firstWord"));
+        secondWordColumn.setCellValueFactory(new PropertyValueFactory<>("secondWord"));
         vocabularyTable.setItems(observableVocabularyList);
-        filePathInput.setText("vocabulary.txt");
-        updateDirectionLabel();
+        firstLanguageInput.setText("Deutsch");
+        secondLanguageInput.setText("Englisch");
+        handleCreateFileName();
+        updateLanguageNames();
+    }
+
+    @FXML
+    public void handleCreateFileName() {
+        try {
+            filePathInput.setText(model.createFileName(firstLanguageInput.getText(), secondLanguageInput.getText()));
+            updateLanguageNames();
+            showDictionaryMessage("Dateiname wurde erstellt.", Color.BLACK);
+        } catch (VocabularyException exception) {
+            showDictionaryMessage("Fehler: " + exception.getMessage(), Color.RED);
+        }
     }
 
     @FXML
     public void handleAddVocabulary() {
         try {
-            model.addVocabulary(germanInput.getText(), translationInput.getText());
+            model.addVocabulary(firstWordInput.getText(), secondWordInput.getText());
             updateTable();
-            germanInput.clear();
-            translationInput.clear();
-            showDictionaryMessage("Vokabel wurde hinzugefuegt.", Color.BLACK);
-        } catch (IllegalArgumentException exception) {
+            firstWordInput.clear();
+            secondWordInput.clear();
+            showDictionaryMessage("Vokabel wurde hinzugefügt.", Color.BLACK);
+        } catch (VocabularyException exception) {
             showDictionaryMessage("Fehler: " + exception.getMessage(), Color.RED);
         }
     }
@@ -81,8 +99,8 @@ public class VocabularyViewModel {
             model.deleteVocabulary(deleteInput.getText());
             updateTable();
             deleteInput.clear();
-            showDictionaryMessage("Vokabel wurde geloescht.", Color.BLACK);
-        } catch (IllegalArgumentException exception) {
+            showDictionaryMessage("Vokabel wurde gelöscht.", Color.BLACK);
+        } catch (VocabularyException exception) {
             showDictionaryMessage("Fehler: " + exception.getMessage(), Color.RED);
         }
     }
@@ -93,11 +111,11 @@ public class VocabularyViewModel {
 
         if (currentVocabulary == null) {
             questionLabel.setText("Keine Vokabeln vorhanden");
-            showTrainerMessage("Fuege zuerst eine Vokabel hinzu.", Color.RED);
+            showTrainerMessage("Füge zuerst eine Vokabel hinzu.", Color.RED);
             return;
         }
 
-        questionLabel.setText(model.getQuestion(currentVocabulary, germanToEnglish));
+        questionLabel.setText(model.getQuestion(currentVocabulary, firstToSecond));
         answerInput.clear();
         trainerFeedbackLabel.setText("");
     }
@@ -109,16 +127,16 @@ public class VocabularyViewModel {
             return;
         }
 
-        if (model.isCorrectAnswer(currentVocabulary, answerInput.getText(), germanToEnglish)) {
+        if (model.isCorrectAnswer(currentVocabulary, answerInput.getText(), firstToSecond)) {
             showTrainerMessage("Richtig!", Color.GREEN);
         } else {
-            showTrainerMessage("Falsch. Richtig ist: " + model.getCorrectAnswer(currentVocabulary, germanToEnglish), Color.RED);
+            showTrainerMessage("Falsch. Richtig ist: " + model.getCorrectAnswer(currentVocabulary, firstToSecond), Color.RED);
         }
     }
 
     @FXML
     public void handleChangeDirection() {
-        germanToEnglish = !germanToEnglish;
+        firstToSecond = !firstToSecond;
         updateDirectionLabel();
         handleNextVocabulary();
     }
@@ -127,9 +145,11 @@ public class VocabularyViewModel {
     public void handleLoadVocabulary() {
         try {
             model.load(filePathInput.getText());
+            updateLanguagesFromFileName();
+            updateLanguageNames();
             updateTable();
-            showDictionaryMessage("Woerterbuch wurde geladen.", Color.BLACK);
-        } catch (IOException exception) {
+            showDictionaryMessage("Wörterbuch wurde geladen.", Color.BLACK);
+        } catch (VocabularyFileException exception) {
             showDictionaryMessage("Fehler beim Laden: " + exception.getMessage(), Color.RED);
         }
     }
@@ -137,9 +157,10 @@ public class VocabularyViewModel {
     @FXML
     public void handleSaveVocabulary() {
         try {
+            updateLanguageNames();
             model.save(filePathInput.getText());
-            showDictionaryMessage("Woerterbuch wurde gespeichert.", Color.BLACK);
-        } catch (IOException exception) {
+            showDictionaryMessage("Wörterbuch wurde gespeichert.", Color.BLACK);
+        } catch (VocabularyFileException exception) {
             showDictionaryMessage("Fehler beim Speichern: " + exception.getMessage(), Color.RED);
         }
     }
@@ -148,11 +169,41 @@ public class VocabularyViewModel {
         observableVocabularyList.setAll(model.getVocabularyList());
     }
 
+    private void updateLanguageNames() {
+        firstWordColumn.setText(firstLanguageInput.getText().trim());
+        secondWordColumn.setText(secondLanguageInput.getText().trim());
+        updateDirectionLabel();
+    }
+
+    private void updateLanguagesFromFileName() {
+        String fileName = filePathInput.getText().trim();
+        int lastSlash = Math.max(fileName.lastIndexOf("/"), fileName.lastIndexOf("\\"));
+
+        if (lastSlash >= 0) {
+            fileName = fileName.substring(lastSlash + 1);
+        }
+
+        if (fileName.endsWith(".txt")) {
+            fileName = fileName.substring(0, fileName.length() - 4);
+        }
+
+        String[] parts = fileName.split("_");
+
+        if (parts.length >= 3 && isVocabularyFileName(parts[parts.length - 1])) {
+            firstLanguageInput.setText(parts[0]);
+            secondLanguageInput.setText(parts[1]);
+        }
+    }
+
+    private boolean isVocabularyFileName(String text) {
+        return text.equalsIgnoreCase("vokabeln") || text.equalsIgnoreCase("vokablen");
+    }
+
     private void updateDirectionLabel() {
-        if (germanToEnglish) {
-            directionLabel.setText("Deutsch -> Englisch");
+        if (firstToSecond) {
+            directionLabel.setText(firstLanguageInput.getText().trim() + " -> " + secondLanguageInput.getText().trim());
         } else {
-            directionLabel.setText("Englisch -> Deutsch");
+            directionLabel.setText(secondLanguageInput.getText().trim() + " -> " + firstLanguageInput.getText().trim());
         }
     }
 

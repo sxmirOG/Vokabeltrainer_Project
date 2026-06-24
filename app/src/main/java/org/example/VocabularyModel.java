@@ -13,22 +13,16 @@ public class VocabularyModel {
     private final ArrayList<Vocabulary> vocabularyList = new ArrayList<>();
     private final Random random = new Random();
 
-    public VocabularyModel() {
-    }
-
-    public VocabularyModel(File file) {
-    }
-
     public ArrayList<Vocabulary> getVocabularyList() {
         return vocabularyList;
     }
 
-    public void load(String path) throws IOException {
+    public void load(String path) throws VocabularyFileException {
         vocabularyList.clear();
         File file = new File(path);
 
         if (!file.exists()) {
-            throw new IOException("Datei wurde nicht gefunden.");
+            throw new VocabularyFileException("Datei wurde nicht gefunden.");
         }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -43,10 +37,12 @@ public class VocabularyModel {
 
                 line = reader.readLine();
             }
+        } catch (IOException exception) {
+            throw new VocabularyFileException("Datei konnte nicht geladen werden.");
         }
     }
 
-    public void save(String path) throws IOException {
+    public void save(String path) throws VocabularyFileException {
         File file = new File(path);
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
@@ -54,30 +50,32 @@ public class VocabularyModel {
                 writer.write(vocabulary.toFileLine());
                 writer.newLine();
             }
+        } catch (IOException exception) {
+            throw new VocabularyFileException("Datei konnte nicht gespeichert werden.");
         }
     }
 
-    public void addVocabulary(String german, String translation) {
-        if (german.isBlank() || translation.isBlank()) {
-            throw new IllegalArgumentException("Beide Felder muessen ausgefüllt sein.");
+    public void addVocabulary(String firstWord, String secondWord) throws VocabularyException {
+        if (firstWord.isBlank() || secondWord.isBlank()) {
+            throw new VocabularyException("Beide Felder müssen ausgefüllt sein.");
         }
 
-        if (containsWord(german) || containsWord(translation)) {
-            throw new IllegalArgumentException("Dieses Wort ist bereits im Wörterbuch.");
+        if (containsWord(firstWord) || containsWord(secondWord)) {
+            throw new VocabularyException("Dieses Wort ist bereits im Wörterbuch.");
         }
 
-        vocabularyList.add(new Vocabulary(german.trim(), translation.trim()));
+        vocabularyList.add(new Vocabulary(firstWord.trim(), secondWord.trim()));
     }
 
-    public void deleteVocabulary(String word) {
+    public void deleteVocabulary(String word) throws VocabularyException {
         if (word.isBlank()) {
-            throw new IllegalArgumentException("Bitte ein deutsches oder englisches Wort eingeben.");
+            throw new VocabularyException("Bitte ein Wort eingeben.");
         }
 
         Vocabulary vocabulary = findVocabulary(word);
 
         if (vocabulary == null) {
-            throw new IllegalArgumentException("Das Wort kommt nicht im Wörterbuch vor.");
+            throw new VocabularyException("Das Wort kommt nicht im Wörterbuch vor.");
         }
 
         vocabularyList.remove(vocabulary);
@@ -92,40 +90,48 @@ public class VocabularyModel {
         return vocabularyList.get(index);
     }
 
-    public boolean isCorrectAnswer(Vocabulary vocabulary, String answer, boolean germanToEnglish) {
+    public boolean isCorrectAnswer(Vocabulary vocabulary, String answer, boolean firstToSecond) {
         if (vocabulary == null || answer == null) {
             return false;
         }
 
-        if (germanToEnglish) {
-            return vocabulary.getTranslation().equalsIgnoreCase(answer.trim());
+        if (firstToSecond) {
+            return vocabulary.getSecondWord().equalsIgnoreCase(answer.trim());
         }
 
-        return vocabulary.getGerman().equalsIgnoreCase(answer.trim());
+        return vocabulary.getFirstWord().equalsIgnoreCase(answer.trim());
     }
 
-    public String getQuestion(Vocabulary vocabulary, boolean germanToEnglish) {
+    public String getQuestion(Vocabulary vocabulary, boolean firstToSecond) {
         if (vocabulary == null) {
             return "";
         }
 
-        if (germanToEnglish) {
-            return vocabulary.getGerman();
+        if (firstToSecond) {
+            return vocabulary.getFirstWord();
         }
 
-        return vocabulary.getTranslation();
+        return vocabulary.getSecondWord();
     }
 
-    public String getCorrectAnswer(Vocabulary vocabulary, boolean germanToEnglish) {
+    public String getCorrectAnswer(Vocabulary vocabulary, boolean firstToSecond) {
         if (vocabulary == null) {
             return "";
         }
 
-        if (germanToEnglish) {
-            return vocabulary.getTranslation();
+        if (firstToSecond) {
+            return vocabulary.getSecondWord();
         }
 
-        return vocabulary.getGerman();
+        return vocabulary.getFirstWord();
+    }
+
+    public String createFileName(String firstLanguage, String secondLanguage) throws VocabularyException {
+        if (firstLanguage.isBlank() || secondLanguage.isBlank()) {
+            throw new VocabularyException("Beide Sprachen müssen ausgefüllt sein.");
+        }
+
+        return cleanLanguageName(firstLanguage) + "_" + cleanLanguageName(secondLanguage) + "_vokabeln.txt";
     }
 
     private boolean containsWord(String word) {
@@ -136,15 +142,19 @@ public class VocabularyModel {
         String searchedWord = word.trim();
 
         for (Vocabulary vocabulary : vocabularyList) {
-            if (vocabulary.getGerman().equalsIgnoreCase(searchedWord)) {
+            if (vocabulary.getFirstWord().equalsIgnoreCase(searchedWord)) {
                 return vocabulary;
             }
 
-            if (vocabulary.getTranslation().equalsIgnoreCase(searchedWord)) {
+            if (vocabulary.getSecondWord().equalsIgnoreCase(searchedWord)) {
                 return vocabulary;
             }
         }
 
         return null;
+    }
+
+    private String cleanLanguageName(String language) {
+        return language.trim().replace(" ", "_");
     }
 }

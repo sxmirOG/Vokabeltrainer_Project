@@ -1,23 +1,23 @@
 package org.example;
 
 public class Vocabulary {
-    private String german;
-    private String translation;
+    private final String firstWord;
+    private final String secondWord;
 
-    public Vocabulary(String german, String translation) {
-        this.german = german;
-        this.translation = translation;
+    public Vocabulary(String firstWord, String secondWord) {
+        this.firstWord = firstWord;
+        this.secondWord = secondWord;
     }
 
-    public String getGerman() {
-        return german;
+    public String getFirstWord() {
+        return firstWord;
     }
 
-    public String getTranslation() {
-        return translation;
+    public String getSecondWord() {
+        return secondWord;
     }
 
     public String toFileLine() {
-        return german + ";" + translation;
+        return firstWord + ";" + secondWord;
     }
 }

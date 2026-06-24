@@ -38,22 +38,36 @@
                                     <Insets bottom="20.0" left="20.0" right="15.0" top="10.0" />
                                 </padding>
 
+                                <Label text="Sprachen" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+
+                                <GridPane hgap="8.0" vgap="10.0">
+                                    <Label text="Sprache 1:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                    <TextField fx:id="firstLanguageInput" promptText="z. B. Deutsch"
+                                               GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                                    <Label text="Sprache 2:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                    <TextField fx:id="secondLanguageInput" promptText="z. B. Englisch"
+                                               GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                </GridPane>
+
+                                <Button maxWidth="Infinity" onAction="#handleCreateFileName" text="Dateiname erstellen" />
+
                                 <Label text="Neue Vokabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
 
                                 <GridPane hgap="8.0" vgap="10.0">
-                                    <Label text="Deutsch:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                                    <TextField fx:id="germanInput" promptText="z. B. Haus"
+                                    <Label text="Wort 1:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                    <TextField fx:id="firstWordInput" promptText="z. B. Haus"
                                                GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-                                    <Label text="&#220;bersetzung:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                                    <TextField fx:id="translationInput" promptText="z. B. house"
+                                    <Label text="Wort 2:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                    <TextField fx:id="secondWordInput" promptText="z. B. house"
                                                GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                 </GridPane>
 
                                 <Button fx:id="addButton" maxWidth="Infinity" onAction="#handleAddVocabulary" text="Hinzuf&#252;gen" />
 
                                 <Label text="Vokabel l&#246;schen" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
-                                <TextField fx:id="deleteInput" promptText="Deutsch oder Englisch" />
+                                <TextField fx:id="deleteInput" promptText="Wort aus Sprache 1 oder 2" />
                                 <Button fx:id="deleteButton" maxWidth="Infinity" onAction="#handleDeleteVocabulary" text="L&#246;schen" />
 
                                 <Label text="Datei" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
@@ -77,8 +91,8 @@
 
                                 <TableView fx:id="vocabularyTable" VBox.vgrow="ALWAYS">
                                     <columns>
-                                        <TableColumn fx:id="germanColumn" prefWidth="250.0" text="Deutsch" />
-                                        <TableColumn fx:id="translationColumn" prefWidth="250.0" text="&#220;bersetzung" />
+                                        <TableColumn fx:id="firstWordColumn" prefWidth="250.0" text="Sprache 1" />
+                                        <TableColumn fx:id="secondWordColumn" prefWidth="250.0" text="Sprache 2" />
                                     </columns>
                                 </TableView>
                             </VBox>

@@ -2,12 +2,14 @@ package org.example;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -15,38 +17,48 @@ class VocabularyModelTest {
     @TempDir
     Path tempDir;
 
-    @Test
-    void addVocabularyStoresVocabularyInList() throws Exception {
-        VocabularyModel model = new VocabularyModel();
+    private VocabularyModel model;
 
+    @BeforeEach
+    void setUp() {
+        model = new VocabularyModel();
+    }
+
+    @Test
+    void testAddVocabularyStoresVocabularyInList() throws Exception {
         model.addVocabulary("Haus", "house");
 
         assertEquals(1, model.getVocabularyList().size());
-        assertEquals("Haus", model.getVocabularyList().get(0).getGerman());
-        assertEquals("house", model.getVocabularyList().get(0).getTranslation());
+        assertEquals("Haus", model.getVocabularyList().get(0).getFirstWord());
+        assertEquals("house", model.getVocabularyList().get(0).getSecondWord());
     }
 
     @Test
-    void addVocabularyRejectsDuplicateGermanWord() throws Exception {
-        VocabularyModel model = new VocabularyModel();
+    void testAddVocabularyRejectsEmptyGermanWord() {
+        assertThrows(VocabularyException.class, () -> model.addVocabulary("", "house"));
+    }
 
+    @Test
+    void testAddVocabularyRejectsEmptyTranslation() {
+        assertThrows(VocabularyException.class, () -> model.addVocabulary("Haus", ""));
+    }
+
+    @Test
+    void testAddVocabularyRejectsDuplicateGermanWord() throws Exception {
         model.addVocabulary("Haus", "house");
 
-        assertThrows(IllegalArgumentException.class, () -> model.addVocabulary("haus", "building"));
+        assertThrows(VocabularyException.class, () -> model.addVocabulary("haus", "building"));
     }
 
     @Test
-    void addVocabularyRejectsDuplicateEnglishWord() throws Exception {
-        VocabularyModel model = new VocabularyModel();
-
+    void testAddVocabularyRejectsDuplicateEnglishWord() throws Exception {
         model.addVocabulary("Haus", "house");
 
-        assertThrows(IllegalArgumentException.class, () -> model.addVocabulary("Gebaeude", "HOUSE"));
+        assertThrows(VocabularyException.class, () -> model.addVocabulary("Gebaeude", "HOUSE"));
     }
 
     @Test
-    void deleteVocabularyRemovesByGermanWord() throws Exception {
-        VocabularyModel model = new VocabularyModel();
+    void testDeleteVocabularyRemovesByGermanWord() throws Exception {
         model.addVocabulary("Haus", "house");
 
         model.deleteVocabulary("Haus");
@@ -55,8 +67,7 @@ class VocabularyModelTest {
     }
 
     @Test
-    void deleteVocabularyRemovesByEnglishWord() throws Exception {
-        VocabularyModel model = new VocabularyModel();
+    void testDeleteVocabularyRemovesByEnglishWord() throws Exception {
         model.addVocabulary("Haus", "house");
 
         model.deleteVocabulary("house");
@@ -65,43 +76,110 @@ class VocabularyModelTest {
     }
 
     @Test
-    void deleteVocabularyRejectsUnknownWord() {
-        VocabularyModel model = new VocabularyModel();
-
-        assertThrows(IllegalArgumentException.class, () -> model.deleteVocabulary("Baum"));
+    void testDeleteVocabularyRejectsUnknownWord() {
+        assertThrows(VocabularyException.class, () -> model.deleteVocabulary("Baum"));
     }
 
     @Test
-    void checkAnswerUsesSelectedDirection() {
-        VocabularyModel model = new VocabularyModel();
+    void testNextVocabularyReturnsNullWhenListIsEmpty() {
+        assertNull(model.nextVocabulary());
+    }
+
+    @Test
+    void testNextVocabularyReturnsVocabularyWhenListHasEntry() throws Exception {
+        model.addVocabulary("Haus", "house");
+
+        assertNotNull(model.nextVocabulary());
+    }
+
+    @Test
+    void testCheckAnswerUsesGermanToEnglishDirection() {
         Vocabulary vocabulary = new Vocabulary("Haus", "house");
 
         assertTrue(model.isCorrectAnswer(vocabulary, "HOUSE", true));
-        assertTrue(model.isCorrectAnswer(vocabulary, "haus", false));
-        assertFalse(model.isCorrectAnswer(vocabulary, "tree", true));
+        assertFalse(model.isCorrectAnswer(vocabulary, "Haus", true));
     }
 
     @Test
-    void saveAndLoadVocabularyUsesGivenFilePath() throws Exception {
+    void testCheckAnswerUsesEnglishToGermanDirection() {
+        Vocabulary vocabulary = new Vocabulary("Haus", "house");
+
+        assertTrue(model.isCorrectAnswer(vocabulary, "haus", false));
+        assertFalse(model.isCorrectAnswer(vocabulary, "house", false));
+    }
+
+    @Test
+    void testGetQuestionUsesGermanToEnglishDirection() {
+        Vocabulary vocabulary = new Vocabulary("Haus", "house");
+
+        assertEquals("Haus", model.getQuestion(vocabulary, true));
+    }
+
+    @Test
+    void testGetQuestionUsesEnglishToGermanDirection() {
+        Vocabulary vocabulary = new Vocabulary("Haus", "house");
+
+        assertEquals("house", model.getQuestion(vocabulary, false));
+    }
+
+    @Test
+    void testGetCorrectAnswerUsesGermanToEnglishDirection() {
+        Vocabulary vocabulary = new Vocabulary("Haus", "house");
+
+        assertEquals("house", model.getCorrectAnswer(vocabulary, true));
+    }
+
+    @Test
+    void testGetCorrectAnswerUsesEnglishToGermanDirection() {
+        Vocabulary vocabulary = new Vocabulary("Haus", "house");
+
+        assertEquals("Haus", model.getCorrectAnswer(vocabulary, false));
+    }
+
+    @Test
+    void testSaveAndLoadVocabularyUsesGivenFilePath() throws Exception {
         File file = tempDir.resolve("dictionary.txt").toFile();
-        VocabularyModel savedModel = new VocabularyModel();
         VocabularyModel loadedModel = new VocabularyModel();
 
-        savedModel.addVocabulary("Haus", "house");
-        savedModel.addVocabulary("Baum", "tree");
-        savedModel.save(file.getAbsolutePath());
+        model.addVocabulary("Haus", "house");
+        model.addVocabulary("Baum", "tree");
+        model.save(file.getAbsolutePath());
         loadedModel.load(file.getAbsolutePath());
 
         assertEquals(2, loadedModel.getVocabularyList().size());
-        assertEquals("Haus", loadedModel.getVocabularyList().get(0).getGerman());
-        assertEquals("tree", loadedModel.getVocabularyList().get(1).getTranslation());
+        assertEquals("Haus", loadedModel.getVocabularyList().get(0).getFirstWord());
+        assertEquals("tree", loadedModel.getVocabularyList().get(1).getSecondWord());
     }
 
     @Test
-    void loadRejectsMissingFile() {
-        VocabularyModel model = new VocabularyModel();
+    void testLoadRejectsMissingFile() {
         File file = tempDir.resolve("missing.txt").toFile();
 
-        assertThrows(IOException.class, () -> model.load(file.getAbsolutePath()));
+        assertThrows(VocabularyFileException.class, () -> model.load(file.getAbsolutePath()));
+    }
+
+    @Test
+    void testSaveRejectsFolderAsFilePath() throws Exception {
+        File folder = tempDir.resolve("folder").toFile();
+        folder.mkdir();
+
+        model.addVocabulary("Haus", "house");
+
+        assertThrows(VocabularyFileException.class, () -> model.save(folder.getAbsolutePath()));
+    }
+
+    @Test
+    void testCreateFileNameUsesSelectedLanguages() throws Exception {
+        assertEquals("Deutsch_Englisch_vokabeln.txt", model.createFileName("Deutsch", "Englisch"));
+    }
+
+    @Test
+    void testCreateFileNameReplacesSpaces() throws Exception {
+        assertEquals("Deutsch_Tuerkisch_Deutsch_vokabeln.txt", model.createFileName("Deutsch", "Tuerkisch Deutsch"));
+    }
+
+    @Test
+    void testCreateFileNameRejectsMissingLanguage() {
+        assertThrows(VocabularyException.class, () -> model.createFileName("Deutsch", ""));
     }
 }
