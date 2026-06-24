@@ -12,6 +12,7 @@ import java.util.Random;
 public class VocabularyModel {
     private final ArrayList<Vocabulary> vocabularyList = new ArrayList<>();
     private final Random random = new Random();
+    private int points = 0;
 
     public ArrayList<Vocabulary> getVocabularyList() {
         return vocabularyList;
@@ -100,6 +101,24 @@ public class VocabularyModel {
         }
 
         return vocabulary.getFirstWord().equalsIgnoreCase(answer.trim());
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public void addPoint() {
+        points++;
+    }
+
+    public void removePoint() {
+        if (points > 0) {
+            points--;
+        }
+    }
+
+    public void resetPoints() {
+        points = 0;
     }
 
     public String getQuestion(Vocabulary vocabulary, boolean firstToSecond) {

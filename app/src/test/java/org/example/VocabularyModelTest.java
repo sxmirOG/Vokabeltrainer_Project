@@ -109,6 +109,45 @@ class VocabularyModelTest {
     }
 
     @Test
+    void testPointsStartAtZero() {
+        assertEquals(0, model.getPoints());
+    }
+
+    @Test
+    void testAddPointIncreasesPoints() {
+        model.addPoint();
+
+        assertEquals(1, model.getPoints());
+    }
+
+    @Test
+    void testRemovePointDecreasesPoints() {
+        model.addPoint();
+        model.addPoint();
+
+        model.removePoint();
+
+        assertEquals(1, model.getPoints());
+    }
+
+    @Test
+    void testRemovePointDoesNotGoBelowZero() {
+        model.removePoint();
+
+        assertEquals(0, model.getPoints());
+    }
+
+    @Test
+    void testResetPointsSetsPointsToZero() {
+        model.addPoint();
+        model.addPoint();
+
+        model.resetPoints();
+
+        assertEquals(0, model.getPoints());
+    }
+
+    @Test
     void testGetQuestionUsesGermanToEnglishDirection() {
         Vocabulary vocabulary = new Vocabulary("Haus", "house");
 
