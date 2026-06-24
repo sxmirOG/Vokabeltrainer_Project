@@ -14,11 +14,10 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="mainPane" prefHeight="600.0" prefWidth="900.0"
+<BorderPane prefHeight="600.0" prefWidth="900.0"
             xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.example.VocabularyViewModel"
-            stylesheets="@vokabeltrainer.css">
+            fx:controller="org.example.VocabularyViewModel">
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="10.0">
@@ -26,8 +25,6 @@
                 <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
             </padding>
             <Label text="Vokabeltrainer" style="-fx-font-size: 26px; -fx-font-weight: bold;" />
-            <Region HBox.hgrow="ALWAYS" />
-            <Button fx:id="modeButton" onAction="#handleToggleMode" text="Dark Mode" />
         </HBox>
     </top>
 
@@ -68,11 +65,11 @@
                                                GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                 </GridPane>
 
-                                <Button fx:id="addButton" maxWidth="Infinity" onAction="#handleAddVocabulary" text="Hinzuf&#252;gen" />
+                                <Button fx:id="addButton" maxWidth="Infinity" onAction="#handleAddVocabulary" text="Hinzufügen" />
 
-                                <Label text="Vokabel l&#246;schen" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                                <Label text="Vokabel löschen" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
                                 <TextField fx:id="deleteInput" promptText="Wort aus Sprache 1 oder 2" />
-                                <Button fx:id="deleteButton" maxWidth="Infinity" onAction="#handleDeleteVocabulary" text="L&#246;schen" />
+                                <Button fx:id="deleteButton" maxWidth="Infinity" onAction="#handleDeleteVocabulary" text="Löschen" />
 
                                 <Label text="Datei" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
                                 <TextField fx:id="filePathInput" promptText="z. B. vocabulary.txt" />
@@ -105,43 +102,55 @@
                 </Tab>
 
                 <Tab text="Trainer">
-                    <VBox spacing="16.0">
+                    <BorderPane style="-fx-background-color: white;">
                         <padding>
-                            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                            <Insets bottom="24.0" left="28.0" right="28.0" top="24.0" />
                         </padding>
 
-                        <Label text="Trainer-Bereich" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+                        <top>
+                            <HBox alignment="CENTER_LEFT" spacing="12.0">
+                                <VBox spacing="6.0">
+                                    <Label text="Richtung" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #666666;" />
+                                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                        <Label fx:id="directionLabel" text="Deutsch -&gt; Englisch" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                                        <Button onAction="#handleChangeDirection" text="Richtung wechseln" />
+                                    </HBox>
+                                </VBox>
 
-                        <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Label text="Richtung:" />
-                            <Label fx:id="directionLabel" text="Deutsch -&gt; Englisch"
-                                   style="-fx-font-size: 16px; -fx-font-weight: bold;" />
-                            <Button onAction="#handleChangeDirection" text="Richtung wechseln" />
-                        </HBox>
+                                <Region HBox.hgrow="ALWAYS" />
 
-                        <HBox alignment="CENTER_LEFT" spacing="10.0">
-                            <Label fx:id="pointsLabel" text="Punkte: 0"
-                                   style="-fx-font-size: 16px; -fx-font-weight: bold;" />
-                            <Button onAction="#handleResetPoints" text="Punkte zur&#252;cksetzen" />
-                        </HBox>
-
-                        <VBox spacing="8.0">
-                            <Label text="Aktuelle Vokabel" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
-                            <Label fx:id="questionLabel" text="Noch keine Frage gestartet"
-                                   style="-fx-font-size: 18px; -fx-font-weight: bold;" />
-                        </VBox>
-
-                        <VBox spacing="8.0">
-                            <Label text="Deine Antwort" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
-                            <HBox alignment="CENTER_LEFT" spacing="10.0">
-                                <TextField fx:id="answerInput" prefWidth="320.0" promptText="Antwort eingeben" />
-                                <Button fx:id="checkButton" onAction="#handleCheckAnswer" text="Pr&#252;fen" />
-                                <Button fx:id="nextButton" onAction="#handleNextVocabulary" text="N&#228;chste Vokabel" />
+                                <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                                    <Label fx:id="pointsLabel" text="Punkte: 0" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                                    <Button onAction="#handleResetPoints" text="Reset" />
+                                </HBox>
                             </HBox>
-                        </VBox>
+                        </top>
 
-                        <Label fx:id="trainerFeedbackLabel" text="" style="-fx-font-size: 14px;" />
-                    </VBox>
+                        <center>
+                            <VBox alignment="CENTER" spacing="22.0">
+                                <Region VBox.vgrow="ALWAYS" />
+
+                                <VBox alignment="CENTER" spacing="8.0">
+                                    <Label text="Aktuelle Vokabel" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #666666;" />
+                                    <Label fx:id="questionLabel" text="Noch keine Frage gestartet" style="-fx-font-size: 34px; -fx-font-weight: bold;" />
+                                </VBox>
+
+                                <TextField fx:id="answerInput" alignment="CENTER" maxWidth="460.0" prefWidth="460.0" promptText="Antwort eingeben" style="-fx-font-size: 18px;" />
+
+                                <Region VBox.vgrow="ALWAYS" />
+                            </VBox>
+                        </center>
+
+                        <bottom>
+                            <VBox alignment="CENTER" spacing="12.0">
+                                <HBox alignment="CENTER" spacing="12.0">
+                                    <Button fx:id="checkButton" onAction="#handleCheckAnswer" text="Prüfen" />
+                                    <Button fx:id="nextButton" onAction="#handleNextVocabulary" text="Nächste Vokabel" />
+                                </HBox>
+                                <Label fx:id="trainerFeedbackLabel" text="" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+                            </VBox>
+                        </bottom>
+                    </BorderPane>
                 </Tab>
             </tabs>
         </TabPane>

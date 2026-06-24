@@ -7,6 +7,8 @@ app/bin
 app/vocabulary.txt
 app/*_vokabeln.txt
 app/*_vokablen.txt
+*_vokabeln.txt
+*_vokablen.txt
 
 # Ignore Kotlin plugin data
 .kotlin

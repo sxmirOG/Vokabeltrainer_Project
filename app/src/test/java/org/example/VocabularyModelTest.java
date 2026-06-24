@@ -93,6 +93,68 @@ class VocabularyModelTest {
     }
 
     @Test
+    void testNextTrainingVocabularyReturnsNullAfterAnsweredWord() throws Exception {
+        model.addVocabulary("Haus", "house");
+        Vocabulary vocabulary = model.nextTrainingVocabulary();
+
+        model.checkTrainingAnswer(vocabulary, "house", true);
+
+        assertNull(model.nextTrainingVocabulary());
+    }
+
+    @Test
+    void testCheckTrainingAnswerCountsCorrectAnswer() throws Exception {
+        model.addVocabulary("Haus", "house");
+        Vocabulary vocabulary = model.nextTrainingVocabulary();
+
+        boolean result = model.checkTrainingAnswer(vocabulary, "house", true);
+
+        assertTrue(result);
+        assertEquals(1, model.getPoints());
+        assertEquals(1, model.getCorrectAnswers());
+        assertEquals(1, model.getAnsweredVocabularyCount());
+    }
+
+    @Test
+    void testCheckTrainingAnswerCountsWrongAnswerWithoutPoint() throws Exception {
+        model.addVocabulary("Haus", "house");
+        Vocabulary vocabulary = model.nextTrainingVocabulary();
+
+        boolean result = model.checkTrainingAnswer(vocabulary, "tree", true);
+
+        assertFalse(result);
+        assertEquals(0, model.getPoints());
+        assertEquals(0, model.getCorrectAnswers());
+        assertEquals(1, model.getAnsweredVocabularyCount());
+    }
+
+    @Test
+    void testTrainingFinishedAfterAllWordsWereAnswered() throws Exception {
+        model.addVocabulary("Haus", "house");
+        Vocabulary vocabulary = model.nextTrainingVocabulary();
+
+        model.checkTrainingAnswer(vocabulary, "house", true);
+
+        assertTrue(model.isTrainingFinished());
+        assertEquals(1, model.getTrainingVocabularyCount());
+    }
+
+    @Test
+    void testStartTrainingRoundResetsTrainingResult() throws Exception {
+        model.addVocabulary("Haus", "house");
+        Vocabulary vocabulary = model.nextTrainingVocabulary();
+        model.checkTrainingAnswer(vocabulary, "house", true);
+
+        model.startTrainingRound();
+
+        assertEquals(0, model.getPoints());
+        assertEquals(0, model.getCorrectAnswers());
+        assertEquals(0, model.getAnsweredVocabularyCount());
+        assertFalse(model.isTrainingFinished());
+        assertNotNull(model.nextTrainingVocabulary());
+    }
+
+    @Test
     void testCheckAnswerUsesGermanToEnglishDirection() {
         Vocabulary vocabulary = new Vocabulary("Haus", "house");
 

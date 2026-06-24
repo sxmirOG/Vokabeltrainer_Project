@@ -11,8 +11,13 @@ import java.util.Random;
 
 public class VocabularyModel {
     private final ArrayList<Vocabulary> vocabularyList = new ArrayList<>();
+    private final ArrayList<Vocabulary> trainingVocabularyList = new ArrayList<>();
     private final Random random = new Random();
     private int points = 0;
+    private int correctAnswers = 0;
+    private int answeredVocabularyCount = 0;
+    private int trainingVocabularyCount = 0;
+    private boolean trainingStarted = false;
 
     public ArrayList<Vocabulary> getVocabularyList() {
         return vocabularyList;
@@ -20,6 +25,7 @@ public class VocabularyModel {
 
     public void load(String path) throws VocabularyFileException {
         vocabularyList.clear();
+        startTrainingRound();
         File file = new File(path);
 
         if (!file.exists()) {
@@ -38,6 +44,8 @@ public class VocabularyModel {
 
                 line = reader.readLine();
             }
+
+            startTrainingRound();
         } catch (IOException exception) {
             throw new VocabularyFileException("Datei konnte nicht geladen werden.");
         }
@@ -66,6 +74,7 @@ public class VocabularyModel {
         }
 
         vocabularyList.add(new Vocabulary(firstWord.trim(), secondWord.trim()));
+        startTrainingRound();
     }
 
     public void deleteVocabulary(String word) throws VocabularyException {
@@ -80,6 +89,7 @@ public class VocabularyModel {
         }
 
         vocabularyList.remove(vocabulary);
+        startTrainingRound();
     }
 
     public Vocabulary nextVocabulary() {
@@ -89,6 +99,60 @@ public class VocabularyModel {
 
         int index = random.nextInt(vocabularyList.size());
         return vocabularyList.get(index);
+    }
+
+    public void startTrainingRound() {
+        trainingVocabularyList.clear();
+        trainingVocabularyList.addAll(vocabularyList);
+        trainingVocabularyCount = trainingVocabularyList.size();
+        correctAnswers = 0;
+        answeredVocabularyCount = 0;
+        trainingStarted = true;
+        resetPoints();
+    }
+
+    public Vocabulary nextTrainingVocabulary() {
+        if (!trainingStarted) {
+            startTrainingRound();
+        }
+
+        if (trainingVocabularyList.isEmpty()) {
+            return null;
+        }
+
+        int index = random.nextInt(trainingVocabularyList.size());
+        return trainingVocabularyList.get(index);
+    }
+
+    public boolean checkTrainingAnswer(Vocabulary vocabulary, String answer, boolean firstToSecond) {
+        boolean correct = isCorrectAnswer(vocabulary, answer, firstToSecond);
+
+        if (trainingVocabularyList.remove(vocabulary)) {
+            answeredVocabularyCount++;
+
+            if (correct) {
+                correctAnswers++;
+                addPoint();
+            }
+        }
+
+        return correct;
+    }
+
+    public boolean isTrainingFinished() {
+        return trainingStarted && trainingVocabularyList.isEmpty();
+    }
+
+    public int getCorrectAnswers() {
+        return correctAnswers;
+    }
+
+    public int getAnsweredVocabularyCount() {
+        return answeredVocabularyCount;
+    }
+
+    public int getTrainingVocabularyCount() {
+        return trainingVocabularyCount;
     }
 
     public boolean isCorrectAnswer(Vocabulary vocabulary, String answer, boolean firstToSecond) {

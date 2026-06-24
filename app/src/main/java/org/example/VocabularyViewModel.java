@@ -3,22 +3,14 @@ package org.example;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 
 public class VocabularyViewModel {
-    @FXML
-    private BorderPane mainPane;
-
-    @FXML
-    private Button modeButton;
-
     @FXML
     private TextField firstLanguageInput;
 
@@ -68,7 +60,6 @@ public class VocabularyViewModel {
     private final ObservableList<Vocabulary> observableVocabularyList = FXCollections.observableArrayList();
     private Vocabulary currentVocabulary;
     private boolean firstToSecond = true;
-    private boolean darkMode = false;
 
     @FXML
     public void initialize() {
@@ -80,7 +71,6 @@ public class VocabularyViewModel {
         handleCreateFileName();
         updateLanguageNames();
         updatePointsLabel();
-        updateMode();
     }
 
     @FXML
@@ -99,6 +89,7 @@ public class VocabularyViewModel {
         try {
             model.addVocabulary(firstWordInput.getText(), secondWordInput.getText());
             updateTable();
+            updatePointsLabel();
             firstWordInput.clear();
             secondWordInput.clear();
             showDictionaryMessage("Vokabel wurde hinzugefügt.", Color.BLACK);
@@ -112,6 +103,7 @@ public class VocabularyViewModel {
         try {
             model.deleteVocabulary(deleteInput.getText());
             updateTable();
+            updatePointsLabel();
             deleteInput.clear();
             showDictionaryMessage("Vokabel wurde gelöscht.", Color.BLACK);
         } catch (VocabularyException exception) {
@@ -121,11 +113,16 @@ public class VocabularyViewModel {
 
     @FXML
     public void handleNextVocabulary() {
-        currentVocabulary = model.nextVocabulary();
+        currentVocabulary = model.nextTrainingVocabulary();
 
         if (currentVocabulary == null) {
-            questionLabel.setText("Keine Vokabeln vorhanden");
-            showTrainerMessage("Füge zuerst eine Vokabel hinzu.", Color.RED);
+            if (model.getVocabularyList().isEmpty()) {
+                questionLabel.setText("Keine Vokabeln vorhanden");
+                showTrainerMessage("Füge zuerst eine Vokabel hinzu.", Color.RED);
+            } else {
+                questionLabel.setText("Training beendet");
+                showTrainerMessage(createResultMessage(), Color.BLACK);
+            }
             return;
         }
 
@@ -141,15 +138,22 @@ public class VocabularyViewModel {
             return;
         }
 
-        if (model.isCorrectAnswer(currentVocabulary, answerInput.getText(), firstToSecond)) {
-            model.addPoint();
+        String correctAnswer = model.getCorrectAnswer(currentVocabulary, firstToSecond);
+        boolean correct = model.checkTrainingAnswer(currentVocabulary, answerInput.getText(), firstToSecond);
+
+        if (correct) {
             showTrainerMessage("Richtig!", Color.GREEN);
         } else {
-            model.removePoint();
-            showTrainerMessage("Falsch. Richtig ist: " + model.getCorrectAnswer(currentVocabulary, firstToSecond), Color.RED);
+            showTrainerMessage("Falsch. Richtig ist: " + correctAnswer, Color.RED);
         }
 
+        currentVocabulary = null;
         updatePointsLabel();
+
+        if (model.isTrainingFinished()) {
+            questionLabel.setText("Training beendet");
+            showTrainerMessage(createResultMessage(), Color.BLACK);
+        }
     }
 
     @FXML
@@ -162,14 +166,11 @@ public class VocabularyViewModel {
     @FXML
     public void handleResetPoints() {
         model.resetPoints();
+        model.startTrainingRound();
+        currentVocabulary = null;
+        questionLabel.setText("Noch keine Frage gestartet");
         updatePointsLabel();
-        showTrainerMessage("Punkte wurden zurueckgesetzt.", Color.BLACK);
-    }
-
-    @FXML
-    public void handleToggleMode() {
-        darkMode = !darkMode;
-        updateMode();
+        showTrainerMessage("Punkte wurden zurückgesetzt.", Color.BLACK);
     }
 
     @FXML
@@ -179,6 +180,7 @@ public class VocabularyViewModel {
             updateLanguagesFromFileName();
             updateLanguageNames();
             updateTable();
+            updatePointsLabel();
             showDictionaryMessage("Wörterbuch wurde geladen.", Color.BLACK);
         } catch (VocabularyFileException exception) {
             showDictionaryMessage("Fehler beim Laden: " + exception.getMessage(), Color.RED);
@@ -242,31 +244,18 @@ public class VocabularyViewModel {
         pointsLabel.setText("Punkte: " + model.getPoints());
     }
 
-    private void updateMode() {
-        if (darkMode) {
-            mainPane.getStyleClass().add("dark-mode");
-            modeButton.setText("White Mode");
-        } else {
-            mainPane.getStyleClass().remove("dark-mode");
-            modeButton.setText("Dark Mode");
-        }
+    private String createResultMessage() {
+        return "Training beendet: Du hattest " + model.getCorrectAnswers()
+                + " von " + model.getTrainingVocabularyCount() + " Vokabeln richtig.";
     }
 
     private void showDictionaryMessage(String message, Color color) {
         dictionaryFeedbackLabel.setText(message);
-        dictionaryFeedbackLabel.setTextFill(getMessageColor(color));
+        dictionaryFeedbackLabel.setTextFill(color);
     }
 
     private void showTrainerMessage(String message, Color color) {
         trainerFeedbackLabel.setText(message);
-        trainerFeedbackLabel.setTextFill(getMessageColor(color));
-    }
-
-    private Color getMessageColor(Color color) {
-        if (Color.BLACK.equals(color) && darkMode) {
-            return Color.WHITE;
-        }
-
-        return color;
+        trainerFeedbackLabel.setTextFill(color);
     }
 }
